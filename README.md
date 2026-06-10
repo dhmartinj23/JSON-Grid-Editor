@@ -7,6 +7,10 @@ JSON Grid Editor is a standalone browser-based tool to view, edit, and validate 
 
 Changes made in either side are reflected immediately on the other side.
 
+## Demo
+![demo](./demo.png)
+
+
 ## Key Benefits
 - Fast JSON editing with grid convenience: edit complex nested structures without manually hunting through raw JSON.
 - Two-way sync: JSON text updates the grid, and grid edits update JSON instantly.
