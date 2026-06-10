@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PGSV IN Digital Solution - Json Grid Editor</title>
+    <style>
+        :root {
+            /* Palette inspired by the uploaded image */
+            --red-1: #ff000d;
+            --red-2: #c80000;
+            --white: #ffffff;
+            --gray-1: #efefef;
+            --gray-2: #d8d8d8;
+            --gray-3: #b2b2b2;
+            --gray-4: #7d7d7d;
+            --gray-5: #494949;
+            --gray-6: #1f1f22;
+            --black: #000000;
+            --accent-cyan: #20c0d8;
+            --accent-blue: #1868e6;
+            --accent-green: #0aa34a;
+            --accent-yellow: #f1cf00;
+            --accent-magenta: #f000a6;
+            --split-left: 28%;
+            --app-bg: var(--gray-1);
+            --panel-bg: var(--white);
+            --panel-alt-bg: #fafafa;
+            --editor-bg: #fbfbfb;
+            --gutter-bg: #f6f6f6;
+            --gutter-fg: #4c4c4c;
+            --text-main: #1e1e1e;
+            --muted-text: #666666;
+            --viewer-bg: #ffffff;
+            --viewer-border: #444444;
+            --viewer-header-bg: #f3f3f3;
+            --viewer-key: #001080;
+            --viewer-object: #267F99;
+            --viewer-array: #795E26;
+            --viewer-string: #A31515;
+            --viewer-number: #098658;
+            --viewer-literal: #0000FF;
+            --focus-bg: #edf4ff;
+            --focus-border: #7ea7ff;
+        }
+
+        body.dark {
+            --app-bg: #1e1e1e;
+            --panel-bg: #252526;
+            --panel-alt-bg: #1e1e1e;
+            --editor-bg: #1e1e1e;
+            --gutter-bg: #252526;
+            --gutter-fg: #858585;
+            --text-main: #d4d4d4;
+            --muted-text: #9da0a6;
+            --viewer-bg: #1e1e1e;
+            --viewer-border: #c5c5c5;
+            --viewer-header-bg: #2d2d30;
+            --viewer-key: #9cdcfe;
+            --viewer-object: #4EC9B0;
+            --viewer-array: #DCDCAA;
+            --viewer-string: #CE9178;
+            --viewer-number: #B5CEA8;
+            --viewer-literal: #569CD6;
+            --focus-bg: #22324a;
+            --focus-border: #4f8cff;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: Segoe UI, Arial, sans-serif;
+            background: var(--app-bg);
+            color: var(--text-main);
+            overflow: hidden
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit
+        }
+
+        .page-shell {
+            height: 100%;
+            display: flex;
+            flex-direction: column
+        }
+
+        .app-titlebar {
+            background: linear-gradient(90deg, var(--gray-6), #232428);
+            color: var(--white);
+            border-bottom: 4px solid var(--red-1);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px
+        }
+
+        .titlebar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .theme-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #f3f3f3
+        }
+
+        .theme-switch input {
+            appearance: none;
+            width: 42px;
+            height: 22px;
+            border-radius: 999px;
+            border: 1px solid #5f5f5f;
+            background: #3b3b3b;
+            position: relative;
+            cursor: pointer;
+            transition: background .2s ease, border-color .2s ease
+        }
+
+        .theme-switch input::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform .2s ease
+        }
+
+        .theme-switch input:checked {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue)
+        }
+
+        .theme-switch input:checked::before {
+            transform: translateX(20px)
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: .2px
+        }
+
+        .app-subtitle {
+            font-size: 12px;
+            color: #d7d7d7;
+            margin-top: 2px
+        }
+
+        .app-credit {
+            font-size: 12px;
+            color: #f3f3f3;
+            padding: 6px 10px;
+            border: 1px solid #505050;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, .04)
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: var(--split-left) 14px minmax(300px, 1fr);
+            height: calc(100% - 58px);
+            min-height: 0
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            background: var(--panel-bg)
+        }
+
+        .divider {
+            background: var(--gray-2);
+            position: relative;
+            cursor: col-resize;
+            border-left: 1px solid var(--gray-3);
+            border-right: 1px solid var(--gray-3)
+        }
+
+        .divider::before {
+            content: '◀▶';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--gray-3);
+            color: #143249;
+            border: 1px solid var(--gray-4);
+            border-radius: 12px;
+            padding: 34px 3px;
+            font-size: 15px;
+            letter-spacing: -2px
+        }
+
+        .toolbar {
+            height: 42px;
+            background: linear-gradient(90deg, var(--gray-6), #232428);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 6px;
+            color: var(--white);
+            border-bottom: 1px solid var(--black);
+            overflow: auto hidden
+        }
+
+        .toolbar-title {
+            font-weight: 700;
+            padding: 0 10px;
+            min-width: 95px;
+            white-space: nowrap
+        }
+
+        .theme-toggle {
+            margin-left: auto
+        }
+
+        .theme-toggle .toolbtn {
+            min-width: 96px
+        }
+
+        .toolbar .right {
+            margin-left: auto;
+            display: flex;
+            gap: 6px
+        }
+
+        .json-toolbar-group {
+            display: flex;
+            gap: 6px
+        }
+
+        .toolbtn {
+            height: 30px;
+            padding: 0 10px;
+            border: none;
+            border-radius: 2px;
+            color: var(--white);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap
+        }
+
+        .toolbtn.red {
+            background: var(--red-1)
+        }
+
+        .toolbtn.red2 {
+            background: var(--red-2)
+        }
+
+        .toolbtn.blue {
+            background: var(--accent-blue)
+        }
+
+        .toolbtn.green {
+            background: var(--accent-green)
+        }
+
+        .toolbtn.yellow {
+            background: var(--accent-yellow);
+            color: #222
+        }
+
+        .toolbtn.cyan {
+            background: var(--accent-cyan);
+            color: #083843
+        }
+
+        .toolbtn.magenta {
+            background: var(--accent-magenta)
+        }
+
+        .toolbtn.gray {
+            background: var(--gray-4)
+        }
+
+        .toolbtn:hover {
+            filter: brightness(1.05)
+        }
+
+        .editor-wrap {
+            display: block;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            background: var(--panel-alt-bg)
+        }
+
+        .json-editor-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden
+        }
+
+        .json-scroll {
+            display: grid;
+            grid-template-columns: 46px 1fr;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            position: relative
+        }
+
+        .json-highlighter {
+            position: absolute;
+            top: 0;
+            left: 46px;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: auto;
+            line-height: 22px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            padding: 10px 14px 10px 16px;
+            white-space: pre;
+            word-wrap: break-word;
+            word-break: break-all;
+            color: var(--text-main);
+            user-select: none;
+            font-weight: normal
+        }
+
+        .json-highlighter .json-key {
+            color: var(--viewer-key);
+            font-weight: normal
+        }
+
+        .json-highlighter .json-string {
+            color: var(--viewer-string)
+        }
+
+        .json-highlighter .json-number {
+            color: var(--viewer-number)
+        }
+
+        .json-highlighter .json-boolean,
+        .json-highlighter .json-null {
+            color: var(--viewer-literal)
+        }
+
+        .json-highlighter .json-punc {
+            color: var(--text-main)
+        }
+
+        .json-panel-view {
+            width: 100%;
+            height: 100%;
+            min-height: 0
+        }
+
+        .json-panel-view.hidden {
+            display: none
+        }
+
+        .json-monaco {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            background: var(--editor-bg);
+            display: none;
+        }
+
+        .gutter {
+            background: var(--gutter-bg);
+            border-right: 1px solid var(--gray-2);
+            overflow: auto;
+            padding-top: 6px;
+            color: var(--gutter-fg);
+            min-height: 0;
+            scrollbar-width: none
+        }
+
+        .gutter::-webkit-scrollbar {
+            width: 0;
+            height: 0
+        }
+
+        .line {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 12px
+        }
+
+        .json-area {
+            grid-column: 2;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            background: transparent;
+            padding: 10px 14px 10px 16px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 22px;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            overflow: auto;
+            white-space: pre;
+            min-height: 0;
+            position: relative;
+            z-index: 2;
+            caret-color: var(--text-main)
+        }
+
+        .json-area::placeholder {
+            color: var(--muted-text);
+            -webkit-text-fill-color: var(--muted-text);
+        }
+
+        .json-area::selection {
+            background: rgba(102, 153, 255, 0.32);
+            text-shadow: none;
+        }
+
+        .json-highlighter .json-error {
+            color: #d81b1b;
+            text-decoration: underline wavy #d81b1b;
+            text-underline-offset: 2px;
+        }
+
+        .json-tree-wrap {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: var(--editor-bg);
+            color: var(--text-main);
+            padding: 10px 14px 10px 16px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 22px;
+            white-space: nowrap
+        }
+
+        .json-tree-empty {
+            color: var(--muted-text)
+        }
+
+        .json-tree-line {
+            min-height: 22px
+        }
+
+        .json-indent {
+            display: inline-block;
+            width: 18px
+        }
+
+        .json-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+            border: 1px solid var(--viewer-border);
+            border-radius: 3px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 11px;
+            line-height: 1
+        }
+
+        .json-toggle-spacer {
+            display: inline-block;
+            width: 20px
+        }
+
+        .json-punc {
+            color: var(--text-main)
+        }
+
+        .json-key {
+            color: var(--viewer-key)
+        }
+
+        .json-string {
+            color: var(--viewer-string)
+        }
+
+        .json-number {
+            color: var(--viewer-number)
+        }
+
+        .json-boolean,
+        .json-null {
+            color: var(--viewer-literal)
+        }
+
+        .json-summary {
+            color: var(--muted-text)
+        }
+
+        .grid-wrap {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 8px 10px;
+            background: var(--app-bg)
+        }
+
+        .grid-wrap {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-4) var(--panel-alt-bg);
+        }
+
+        .grid-wrap::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .grid-wrap::-webkit-scrollbar-track {
+            background: var(--panel-alt-bg);
+            border-radius: 8px;
+        }
+
+        .grid-wrap::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gray-4), var(--gray-5));
+            border-radius: 8px;
+            border: 2px solid var(--panel-alt-bg);
+        }
+
+        .grid-wrap::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-blue), #2a79ee);
+        }
+
+        .simple-edit,
+        .nested-edit {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            outline: none;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 3px 5px;
+            border-radius: 4px
+        }
+
+        .simple-edit:focus,
+        .nested-edit:focus {
+            border-color: var(--focus-border);
+            background: var(--focus-bg)
+        }
+
+        .name-green {
+            color: #0c8532;
+            font-family: Segoe UI, Arial, sans-serif
+        }
+
+        .status {
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #4f4f4f;
+            background: #fafafa;
+            border-top: 1px solid var(--gray-2);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center
+        }
+
+        .status .credit-inline {
+            color: #7a7a7a
+        }
+
+        .empty {
+            padding: 25px;
+            color: var(--muted-text)
+        }
+
+        .viewer-host {
+            min-width: max-content;
+            color: var(--text-main)
+        }
+
+        .viewer-host table {
+            margin: 2px 0;
+            border-collapse: collapse;
+            background: var(--viewer-bg)
+        }
+
+        .viewer-host td,
+        .viewer-host th {
+            padding: 2px 4px;
+            vertical-align: baseline
+        }
+
+        .viewer-table {
+            width: max-content;
+            min-width: max-content
+        }
+
+        .viewer-table.object {
+            border: 2px solid #444
+        }
+
+        .viewer-key,
+        .viewer-member-header {
+            color: var(--viewer-key);
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .viewer-key,
+        .viewer-element,
+        .viewer-member,
+        .viewer-value-cell {
+            border: 1px solid var(--viewer-border)
+        }
+
+        .viewer-member-header {
+            border: 1px solid var(--viewer-border);
+            border-top: 2px solid var(--viewer-border);
+            border-bottom: 2px solid var(--viewer-border);
+            position: relative;
+            min-width: 8ch;
+            width: auto;
+            background: var(--viewer-header-bg)
+        }
+
+        .viewer-index,
+        .viewer-collapsed {
+            white-space: nowrap
+        }
+
+        .viewer-index {
+            border-right: 2px solid var(--viewer-border);
+            min-width: 52px
+        }
+
+        .viewer-index::after,
+        .viewer-badge {
+            padding: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            line-height: 1.2;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff
+        }
+
+        .viewer-index::after {
+            margin-left: 2px
+        }
+
+        .viewer-collapsed {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .viewer-index.object::after {
+            content: 'Obj';
+            background: var(--viewer-object)
+        }
+
+        .viewer-index.array::after {
+            content: 'Arr';
+            background: var(--viewer-array)
+        }
+
+        .viewer-index.string::after {
+            content: 'Str';
+            background: var(--viewer-string)
+        }
+
+        .viewer-index.number::after {
+            content: 'Num';
+            background: var(--viewer-number)
+        }
+
+        .viewer-index.boolean::after,
+        .viewer-index.null::after {
+            background: var(--viewer-literal)
+        }
+
+        .viewer-index.boolean::after {
+            content: 'Bool'
+        }
+
+        .viewer-index.null::after {
+            content: 'Null'
+        }
+
+        .viewer-badge.object {
+            background: var(--viewer-object)
+        }
+
+        .viewer-badge.array {
+            background: var(--viewer-array)
+        }
+
+        .viewer-expand {
+            display: inline-block;
+            text-align: center;
+            width: 1em;
+            margin-left: 0;
+            cursor: pointer;
+            border: 1px solid var(--viewer-border);
+            border-radius: 3px;
+            user-select: none
+        }
+
+        .viewer-value.string,
+        .viewer-edit.string {
+            color: var(--viewer-string)
+        }
+
+        .viewer-value.number,
+        .viewer-edit.number {
+            color: var(--viewer-number)
+        }
+
+        .viewer-value.boolean,
+        .viewer-edit.boolean,
+        .viewer-value.null,
+        .viewer-edit.null {
+            color: var(--viewer-literal)
+        }
+
+        .viewer-edit {
+            width: 100%;
+            min-width: 80px;
+            border: 1px solid transparent;
+            background: transparent;
+            outline: none;
+            padding: 1px 2px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: var(--text-main)
+        }
+
+        .viewer-edit:focus {
+            border-color: var(--focus-border);
+            background: var(--focus-bg)
+        }
+
+        .viewer-element,
+        .viewer-member,
+        .viewer-value-cell {
+            min-width: 8ch;
+            width: auto;
+            white-space: nowrap
+        }
+
+        .viewer-resizer {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+            z-index: 10
+        }
+
+        body.dark .app-credit {
+            border-color: #6a6a6a;
+            background: rgba(255, 255, 255, .08)
+        }
+
+        body.dark .divider {
+            background: #2d2d30;
+            border-left-color: #3c3c3c;
+            border-right-color: #3c3c3c
+        }
+
+        body.dark .divider::before {
+            background: #3c3c3c;
+            color: #d4d4d4;
+            border-color: #525252
+        }
+
+        body.dark .theme-switch {
+            color: #d4d4d4
+        }
+
+        body.dark .theme-switch input {
+            background: #2d2d30;
+            border-color: #6b6b6b
+        }
+
+        body.dark .theme-switch input:checked {
+            background: #4f8cff;
+            border-color: #4f8cff
+        }
+
+        body.dark .viewer-index::after,
+        body.dark .viewer-badge {
+            color: #111
+        }
+
+        /* JSON field highlight style */
+        .json-field-highlight {
+            background-color: #ffeb99 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+
+        body.dark .json-field-highlight {
+            background-color: #b8860b !important;
+            color: #fff !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <div class="app-titlebar">
+            <div>
+                <div class="app-title">PGSV IN Digital Solution - JSON Grid Editor</div>
+                <div class="app-subtitle">Editable nested JSON Grid • JSON and Grid stay in sync</div>
+            </div>
+            <div class="titlebar-right">
+                <label class="theme-switch" for="themeToggleBtn">
+                    <span>Dark</span>
+                    <input id="themeToggleBtn" type="checkbox" onchange="toggleTheme(this.checked ? 'dark' : 'light')"
+                        aria-label="Toggle dark mode" />
+                </label>
+                <div class="app-credit">Developed by Thanga</div>
+            </div>
+        </div>
+
+        <div class="workspace" id="workspace">
+            <section class="panel">
+                <div class="toolbar">
+                    <div class="toolbar-title">JSON</div>
+                    <button class="toolbtn gray" onclick="loadSample()">Sample</button>
+                    <button class="toolbtn blue" onclick="focusSearch()">Search</button>
+                    <button class="toolbtn magenta" onclick="formatJson()">Format</button>
+                    <button class="toolbtn cyan" onclick="minifyJson()">Minify</button>
+                    <button class="toolbtn green" onclick="validateJson()">Validate</button>
+                    <button class="toolbtn yellow" onclick="clearJson()">Clear</button>
+                    <div class="json-toolbar-group">
+                    </div>
+                </div>
+                <div class="editor-wrap json-editor-wrapper">
+                    <div class="json-scroll json-panel-view" id="jsonTextView">
+                        <div class="gutter" id="gutter"></div>
+                        <div class="json-highlighter" id="jsonHighlighter"></div>
+                        <textarea id="jsonInput" class="json-area" spellcheck="false"
+                            placeholder="Paste JSON here..."></textarea>
+                    </div>
+                    <div id="monacoEditor" class="json-monaco"></div>
+                </div>
+
+            </section>
+
+            <div class="divider" id="divider" title="Drag to adjust width"></div>
+
+            <section class="panel">
+                <div class="toolbar">
+                    <div class="toolbar-title">GRID</div>
+                    <button class="toolbtn blue" onclick="searchGrid()">Search</button>
+                    <button class="toolbtn blue" onclick="expandAll()">Expand All</button>
+                    <button class="toolbtn blue" onclick="collapseAll()">Collapse All</button>
+                    <div class="right">
+                        <button class="toolbtn red" onclick="downloadJson()">Download JSON</button>
+                        <button class="toolbtn red2" onclick="downloadCsv()">Download CSV</button>
+                    </div>
+                </div>
+                <div class="grid-wrap" id="gridWrap">
+                    <div class="empty">Paste or edit JSON on the left. The grid updates automatically when the JSON is
+                        valid.</div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let columns = [];
+        let collapseState = {};
+        let jsonCollapseState = {};
+        let globalCollapsed = true;
+        let parseTimer = null;
+        let currentTheme = 'light';
+        let jsonViewMode = 'text';
+        let monacoEditor = null;
+        let monacoModel = null;
+        let isUsingMonaco = false;
+
+        const q = (id) => document.getElementById(id);
+        const jsonInput = q('jsonInput');
+
+        function getEditorValue() {
+            return isUsingMonaco && monacoModel ? monacoModel.getValue() : jsonInput.value;
+        }
+
+        function setEditorValue(value) {
+            const next = value == null ? '' : String(value);
+            if (isUsingMonaco && monacoModel) {
+                monacoModel.setValue(next);
+                return;
+            }
+            jsonInput.value = next;
+        }
+
+        function focusEditor() {
+            if (isUsingMonaco && monacoEditor) {
+                monacoEditor.focus();
+                return;
+            }
+            jsonInput.focus();
+        }
+
+        function triggerEditorSync() {
+            syncGutter();
+            syncJsonHighlighter();
+            if (isUpdatingFromGrid) return;
+            if (parseTimer) clearTimeout(parseTimer);
+            parseTimer = setTimeout(() => { tryParseLive(); }, 300);
+        }
+
+        function ensureMonacoLoaded() {
+            return new Promise((resolve, reject) => {
+                if (window.monaco && window.monaco.editor) {
+                    resolve(window.monaco);
+                    return;
+                }
+
+                const existing = document.querySelector('script[data-monaco-loader="1"]');
+                if (existing) {
+                    const waitForMonaco = () => {
+                        if (window.monaco && window.monaco.editor) {
+                            resolve(window.monaco);
+                        } else {
+                            setTimeout(waitForMonaco, 50);
+                        }
+                    };
+                    waitForMonaco();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js';
+                script.async = true;
+                script.dataset.monacoLoader = '1';
+                script.onload = () => {
+                    try {
+                        window.MonacoEnvironment = {
+                            getWorkerUrl: function (_moduleId, label) {
+                                const workerBase = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/base/worker/workerMain.js';
+                                const data = `self.MonacoEnvironment={baseUrl:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/'};importScripts('${workerBase}');`;
+                                return `data:text/javascript;charset=utf-8,${encodeURIComponent(data)}`;
+                            }
+                        };
+
+                        window.require.config({
+                            paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs' }
+                        });
+                        window.require(['vs/editor/editor.main'], () => resolve(window.monaco), reject);
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+                script.onerror = () => reject(new Error('Failed to load Monaco loader'));
+                document.head.appendChild(script);
+            });
+        }
+
+        function applyMonacoTheme() {
+            if (!window.monaco || !window.monaco.editor) return;
+            window.monaco.editor.setTheme(currentTheme === 'dark' ? 'vs-dark' : 'vs');
+        }
+
+        function initMonacoEditor() {
+            const monacoHost = q('monacoEditor');
+            const textView = q('jsonTextView');
+            if (!monacoHost || !textView) return;
+
+            ensureMonacoLoaded().then((monaco) => {
+                const initial = jsonInput.value || '';
+                monacoModel = monaco.editor.createModel(initial, 'json');
+                monacoEditor = monaco.editor.create(monacoHost, {
+                    model: monacoModel,
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    tabSize: 2,
+                    insertSpaces: true,
+                    fontSize: 13,
+                    lineHeight: 22,
+                    fontFamily: 'Consolas, monospace',
+                    roundedSelection: false,
+                    smoothScrolling: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'off',
+                    renderLineHighlight: 'all',
+                    lineNumbersMinChars: 3,
+                    folding: true,
+                    formatOnPaste: true,
+                    formatOnType: true,
+                    glyphMargin: false,
+                    suggestOnTriggerCharacters: true
+                });
+
+                applyMonacoTheme();
+
+                monacoModel.onDidChangeContent(() => {
+                    triggerEditorSync();
+                });
+
+                textView.style.display = 'none';
+                monacoHost.style.display = 'block';
+                isUsingMonaco = true;
+                triggerEditorSync();
+            }).catch((err) => {
+                console.error('Monaco initialization failed:', err);
+                setStatus('Monaco could not load. Using fallback editor.', 'Check internet/CDN access');
+                isUsingMonaco = false;
+            });
+        }
+
+        function applyTheme(theme) {
+            currentTheme = theme === 'dark' ? 'dark' : 'light';
+            document.body.classList.toggle('dark', currentTheme === 'dark');
+            applyMonacoTheme();
+            const themeBtn = q('themeToggleBtn');
+            if (themeBtn) themeBtn.checked = currentTheme === 'dark';
+            try {
+                localStorage.setItem('jsonGridTheme', currentTheme);
+            } catch (e) {
+                void e;
+            }
+        }
+
+        function toggleTheme(nextTheme) {
+            if (nextTheme === 'dark' || nextTheme === 'light') {
+                applyTheme(nextTheme);
+                return;
+            }
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        }
+
+        function syncJsonHighlighter() {
+            if (isUsingMonaco) return;
+            const txt = getEditorValue();
+            const highlighter = q('jsonHighlighter');
+            if (!txt) {
+                highlighter.innerHTML = '';
+                return;
+            }
+            highlighter.innerHTML = highlightJson(txt);
+            // Sync scroll position
+            highlighter.scrollTop = jsonInput.scrollTop;
+            highlighter.scrollLeft = jsonInput.scrollLeft;
+        }
+
+        function highlightJson(text) {
+            let i = 0;
+            const len = text.length;
+            let out = '';
+            const stack = [];
+
+            const add = (content, cls) => {
+                if (!content) return;
+                const safe = escapeHtml(content);
+                out += cls ? `<span class="${cls}">${safe}</span>` : safe;
+            };
+
+            const top = () => stack[stack.length - 1];
+
+            while (i < len) {
+                const ch = text[i];
+
+                if (/\s/.test(ch)) {
+                    let j = i + 1;
+                    while (j < len && /\s/.test(text[j])) j++;
+                    add(text.slice(i, j));
+                    i = j;
+                    continue;
+                }
+
+                if (ch === '"') {
+                    let j = i + 1;
+                    let escaped = false;
+                    while (j < len) {
+                        const c = text[j];
+                        if (escaped) {
+                            escaped = false;
+                        } else if (c === '\\') {
+                            escaped = true;
+                        } else if (c === '"') {
+                            j++;
+                            break;
+                        }
+                        j++;
+                    }
+
+                    const token = text.slice(i, j);
+                    let k = j;
+                    while (k < len && /\s/.test(text[k])) k++;
+                    const asKey = top() && top().type === 'object' && top().expectingKey && text[k] === ':';
+                    add(token, asKey ? 'json-key' : 'json-string');
+                    if (asKey) top().expectingKey = false;
+                    i = j;
+                    continue;
+                }
+
+                if (ch === '{' || ch === '[' || ch === '}' || ch === ']' || ch === ':' || ch === ',') {
+                    add(ch, 'json-punc');
+                    if (ch === '{') {
+                        stack.push({ type: 'object', expectingKey: true });
+                    } else if (ch === '[') {
+                        stack.push({ type: 'array' });
+                    } else if (ch === '}') {
+                        if (top() && top().type === 'object') stack.pop();
+                    } else if (ch === ']') {
+                        if (top() && top().type === 'array') stack.pop();
+                    } else if (ch === ',') {
+                        if (top() && top().type === 'object') top().expectingKey = true;
+                    }
+                    i++;
+                    continue;
+                }
+
+                if (ch === '-' || /\d/.test(ch)) {
+                    let j = i;
+                    if (text[j] === '-') j++;
+                    if (text[j] === '0') {
+                        j++;
+                    } else {
+                        while (j < len && /\d/.test(text[j])) j++;
+                    }
+                    if (text[j] === '.') {
+                        j++;
+                        while (j < len && /\d/.test(text[j])) j++;
+                    }
+                    if (text[j] === 'e' || text[j] === 'E') {
+                        j++;
+                        if (text[j] === '+' || text[j] === '-') j++;
+                        while (j < len && /\d/.test(text[j])) j++;
+                    }
+                    add(text.slice(i, j), 'json-number');
+                    i = j;
+                    continue;
+                }
+
+                if (text.startsWith('true', i)) {
+                    add('true', 'json-boolean');
+                    i += 4;
+                    continue;
+                }
+                if (text.startsWith('false', i)) {
+                    add('false', 'json-boolean');
+                    i += 5;
+                    continue;
+                }
+                if (text.startsWith('null', i)) {
+                    add('null', 'json-null');
+                    i += 4;
+                    continue;
+                }
+
+                let j = i + 1;
+                while (j < len && !/[\s\{\}\[\]",:]/.test(text[j])) j++;
+                add(text.slice(i, j), 'json-error');
+                i = j;
+            }
+
+            return out;
+        }
+
+        function replaceSelection(newText) {
+            if (isUsingMonaco && monacoEditor) {
+                const selection = monacoEditor.getSelection();
+                monacoEditor.executeEdits('json-replace', [{ range: selection, text: newText, forceMoveMarkers: true }]);
+                return;
+            }
+            const start = jsonInput.selectionStart;
+            const end = jsonInput.selectionEnd;
+            jsonInput.setRangeText(newText, start, end, 'end');
+            syncGutter();
+            syncJsonHighlighter();
+            if (isUpdatingFromGrid) return;
+            if (parseTimer) clearTimeout(parseTimer);
+            parseTimer = setTimeout(() => { tryParseLive(); }, 300);
+        }
+
+        function handleJsonEditorKeys(e) {
+            if (isUsingMonaco) return;
+            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                const pairs = { '"': '"', '{': '}', '[': ']' };
+                if (pairs[e.key]) {
+                    const start = jsonInput.selectionStart;
+                    const end = jsonInput.selectionEnd;
+                    const selected = jsonInput.value.slice(start, end);
+                    if (selected) {
+                        e.preventDefault();
+                        replaceSelection(`${e.key}${selected}${pairs[e.key]}`);
+                        jsonInput.setSelectionRange(start + 1, end + 1);
+                        return;
+                    }
+                    if (e.key !== '"') {
+                        e.preventDefault();
+                        replaceSelection(`${e.key}${pairs[e.key]}`);
+                        jsonInput.setSelectionRange(start + 1, start + 1);
+                        return;
+                    }
+                }
+
+                if ((e.key === '}' || e.key === ']' || e.key === '"') && jsonInput.selectionStart === jsonInput.selectionEnd) {
+                    const pos = jsonInput.selectionStart;
+                    if (jsonInput.value[pos] === e.key) {
+                        e.preventDefault();
+                        jsonInput.setSelectionRange(pos + 1, pos + 1);
+                        return;
+                    }
+                }
+            }
+
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = jsonInput.selectionStart;
+                const end = jsonInput.selectionEnd;
+                const value = jsonInput.value;
+
+                if (start !== end && value.slice(start, end).includes('\n')) {
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const selected = value.slice(lineStart, end);
+                    const updated = e.shiftKey
+                        ? selected.replace(/^ {1,2}/gm, '')
+                        : selected.replace(/^/gm, '  ');
+                    jsonInput.setRangeText(updated, lineStart, end, 'select');
+                } else {
+                    jsonInput.setRangeText(e.shiftKey ? '' : '  ', start, end, 'end');
+                }
+
+                syncGutter();
+                syncJsonHighlighter();
+                if (!isUpdatingFromGrid) {
+                    if (parseTimer) clearTimeout(parseTimer);
+                    parseTimer = setTimeout(() => { tryParseLive(); }, 300);
+                }
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const start = jsonInput.selectionStart;
+                const value = jsonInput.value;
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const prefix = value.slice(lineStart, start);
+                const indent = (prefix.match(/^\s*/) || [''])[0];
+                const prevChar = value.slice(0, start).trimEnd().slice(-1);
+                const nextChar = value.slice(start).trimStart().charAt(0);
+                const extraIndent = prevChar === '{' || prevChar === '[' ? '  ' : '';
+                const closingBlock = (prevChar === '{' && nextChar === '}') || (prevChar === '[' && nextChar === ']');
+                const insert = closingBlock
+                    ? `\n${indent}${extraIndent}\n${indent}`
+                    : `\n${indent}${extraIndent}`;
+                replaceSelection(insert);
+            }
+        }
+
+        function setStatus(left, right) {
+            const leftEl = q('statusLeft');
+            const rightEl = q('statusRight');
+            if (left !== undefined && leftEl && leftEl.children[0]) leftEl.children[0].textContent = left;
+            if (right !== undefined && rightEl && rightEl.children[0]) rightEl.children[0].textContent = right;
+        }
+
+        function syncGutter() {
+            if (isUsingMonaco) return;
+            const ta = jsonInput;
+            const gutter = q('gutter');
+            const lines = Math.max(1, ta.value.split('\n').length);
+            let html = '';
+            for (let i = 1; i <= lines; i++) html += `<div class="line">${i}</div>`;
+            gutter.innerHTML = html;
+            gutter.scrollTop = ta.scrollTop;
+        }
+        jsonInput.addEventListener('scroll', () => {
+            if (isUsingMonaco) return;
+            q('gutter').scrollTop = jsonInput.scrollTop;
+            q('jsonHighlighter').scrollTop = jsonInput.scrollTop;
+            q('jsonHighlighter').scrollLeft = jsonInput.scrollLeft;
+        });
+        jsonInput.addEventListener('input', () => {
+            if (isUsingMonaco) return;
+            syncGutter();
+            syncJsonHighlighter();
+            if (isUpdatingFromGrid) return;
+            if (parseTimer) clearTimeout(parseTimer);
+            parseTimer = setTimeout(() => { tryParseLive(); }, 300);
+        });
+        jsonInput.addEventListener('keydown', handleJsonEditorKeys);
+
+        function jsonNodeExpanded(path, rootExpanded = false) {
+            if (rootExpanded) return true;
+            return !(jsonCollapseState[path] ?? true);
+        }
+
+        function toggleJsonNode(path) {
+            jsonCollapseState[path] = !(jsonCollapseState[path] ?? true);
+            renderJsonTree();
+        }
+
+        function expandJsonAll() {
+            jsonCollapseState = {};
+            renderJsonTree(true);
+        }
+
+        function collapseJsonAll() {
+            jsonCollapseState = {};
+            renderJsonTree(false);
+        }
+
+        function jsonIndent(depth) {
+            return '<span class="json-indent"></span>'.repeat(depth);
+        }
+
+        function renderJsonPrimitive(value) {
+            const type = valueType(value);
+            if (type === 'string') return `<span class="json-string">"${escapeHtml(String(value))}"</span>`;
+            if (type === 'number') return `<span class="json-number">${escapeHtml(String(value))}</span>`;
+            if (type === 'boolean') return `<span class="json-boolean">${String(value)}</span>`;
+            if (type === 'null') return '<span class="json-null">null</span>';
+            return `<span>${escapeHtml(String(value))}</span>`;
+        }
+
+        function renderJsonTreeNode(value, path, depth, keyName, isLast, rootExpanded = false) {
+            const indent = jsonIndent(depth);
+            const keyHtml = keyName !== undefined ? `<span class="json-key">"${escapeHtml(String(keyName))}"</span><span class="json-punc">: </span>` : '';
+
+            if (Array.isArray(value)) {
+                const expanded = jsonNodeExpanded(path, rootExpanded);
+                let html = `<div class="json-tree-line">${indent}<span class="json-toggle" onclick="toggleJsonNode('${esc(path)}')">${expanded ? '-' : '+'}</span>${keyHtml}<span class="json-punc">[</span>${expanded ? '' : `<span class="json-summary">Array(${value.length})</span>`}<span class="json-punc">${expanded ? '' : ']'}${isLast ? ',' : ''}</span></div>`;
+                if (expanded) {
+                    value.forEach((item, index) => {
+                        html += renderJsonTreeNode(item, `${path}.${index}`, depth + 1, undefined, index < value.length - 1);
+                    });
+                    html += `<div class="json-tree-line">${indent}<span class="json-toggle-spacer"></span><span class="json-punc">]${isLast ? ',' : ''}</span></div>`;
+                }
+                return html;
+            }
+
+            if (isObject(value)) {
+                const entries = Object.entries(value);
+                const expanded = jsonNodeExpanded(path, rootExpanded);
+                let html = `<div class="json-tree-line">${indent}<span class="json-toggle" onclick="toggleJsonNode('${esc(path)}')">${expanded ? '-' : '+'}</span>${keyHtml}<span class="json-punc">{</span>${expanded ? '' : `<span class="json-summary">Object(${entries.length})</span>`}<span class="json-punc">${expanded ? '' : '}'}${isLast ? ',' : ''}</span></div>`;
+                if (expanded) {
+                    entries.forEach(([childKey, childValue], index) => {
+                        html += renderJsonTreeNode(childValue, `${path}.${childKey}`, depth + 1, childKey, index < entries.length - 1);
+                    });
+                    html += `<div class="json-tree-line">${indent}<span class="json-toggle-spacer"></span><span class="json-punc">}${isLast ? ',' : ''}</span></div>`;
+                }
+                return html;
+            }
+
+            return `<div class="json-tree-line">${indent}<span class="json-toggle-spacer"></span>${keyHtml}${renderJsonPrimitive(value)}<span class="json-punc">${isLast ? ',' : ''}</span></div>`;
+        }
+
+        function renderJsonTree() {
+            // Tree view rendering - kept for compatibility but no longer used in UI
+        }
+
+        function sampleData() {
+            return [
+                { "id": 1, "name": "John", "address": [{ "type": "home", "city": "Chennai", "pincode": 600001 }, { "type": "office", "city": "Chennai", "pincode": 600032 }], "skills": ["Power Apps", "Power Automate"], "manager": { "name": "Rajesh", "location": { "country": "India", "state": "Tamil Nadu" } } }, 
+                { "id": 2, "name": "Sarah", "address": [{ "type": "home", "city": "Bangalore", "pincode": 560001 }, { "type": "office", "city": "Bangalore", "pincode": 560103 }], "skills": ["Power BI"], "manager": { "name": "Gopi", "location": { "country": "India", "state": "Tamil Nadu" } } }
+            ];
+        }
+
+        function loadSample() {
+            rawData = sampleData();
+            globalCollapsed = true;
+            collapseState = {};
+            jsonCollapseState = {};
+            syncJsonFromGrid(true);
+            setStatus('Sample JSON loaded', 'Editable grid ready');
+        }
+
+        function clearJson() {
+            setEditorValue('');
+            syncGutter();
+            syncJsonHighlighter();
+            rawData = []; columns = [];
+            collapseState = {};
+            jsonCollapseState = {};
+            globalCollapsed = true;
+            renderGrid();
+            setStatus('Cleared', 'No data loaded');
+        }
+
+        function focusSearch() {
+            const txt = prompt('Search text in JSON:');
+            if (!txt) return;
+            const editorText = getEditorValue();
+            const idx = editorText.toLowerCase().indexOf(txt.toLowerCase());
+            if (idx < 0) { setStatus('Text not found'); return; }
+            if (isUsingMonaco && monacoEditor) {
+                const startPos = monacoModel.getPositionAt(idx);
+                const endPos = monacoModel.getPositionAt(idx + txt.length);
+                monacoEditor.setSelection({
+                    startLineNumber: startPos.lineNumber,
+                    startColumn: startPos.column,
+                    endLineNumber: endPos.lineNumber,
+                    endColumn: endPos.column
+                });
+                monacoEditor.revealLineInCenter(startPos.lineNumber);
+                monacoEditor.focus();
+            } else {
+                jsonInput.focus();
+                jsonInput.setSelectionRange(idx, idx + txt.length);
+            }
+            setStatus('Search match selected');
+        }
+
+        function tryParseLive() {
+            const txt = getEditorValue().trim();
+            if (!txt) { rawData = []; columns = []; collapseState = {}; jsonCollapseState = {}; globalCollapsed = true; renderGrid(); syncJsonHighlighter(); setStatus('JSON input empty', 'No data loaded'); return; }
+            try {
+                const parsed = JSON.parse(txt);
+                rawData = deepClone(parsed);
+                columns = collectColumns(rawData);
+                collapseState = {};
+                jsonCollapseState = {};
+                globalCollapsed = true;
+                renderGrid();
+                syncJsonHighlighter();
+                setStatus('JSON synced from input', Array.isArray(rawData) ? `${rawData.length} item(s)` : 'Object loaded');
+            } catch (e) {
+                syncJsonHighlighter();
+                setStatus('JSON editing...', 'Waiting for valid JSON');
+            }
+        }
+
+        function formatJson() {
+            try {
+                const parsed = JSON.parse(getEditorValue() || '[]');
+                setEditorValue(JSON.stringify(parsed, null, 2));
+                syncGutter();
+                syncJsonHighlighter();
+                tryParseLive();
+                setStatus('JSON formatted successfully');
+            } catch (e) { setStatus('Invalid JSON: ' + e.message, 'Validation failed'); }
+        }
+
+        function minifyJson() {
+            try {
+                const parsed = JSON.parse(getEditorValue() || '[]');
+                setEditorValue(JSON.stringify(parsed));
+                syncGutter();
+                syncJsonHighlighter();
+                tryParseLive();
+                setStatus('JSON minified successfully');
+            } catch (e) { setStatus('Invalid JSON: ' + e.message, 'Validation failed'); }
+        }
+
+        function validateJson() {
+            try {
+                JSON.parse(getEditorValue() || '[]');
+                tryParseLive();
+                setStatus('Valid JSON', 'Grid updated');
+            } catch (e) { setStatus('Invalid JSON: ' + e.message, 'Validation failed'); }
+        }
+
+
+        function searchGrid() {
+            const term = prompt('Search value in grid:');
+            if (!term) return;
+            const cells = [...document.querySelectorAll('[data-searchable="1"]')];
+            let found = 0;
+            cells.forEach(c => {
+                const val = ('value' in c ? c.value : c.textContent) || '';
+                const hit = val.toLowerCase().includes(term.toLowerCase());
+                c.style.outline = hit ? '2px solid #0aa34a' : 'none';
+                if (hit) found++;
+            });
+            setStatus(undefined, found ? `${found} matching field(s) highlighted` : 'No matches found');
+        }
+
+        function expandAll() { globalCollapsed = false; collapseState = {}; renderGrid(); setStatus(undefined, 'All nested values expanded'); }
+        function collapseAll() { globalCollapsed = true; renderGrid(); setStatus(undefined, 'All nested values collapsed'); }
+
+        function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+        function collectColumns(rows) {
+            const set = new Set();
+            if (Array.isArray(rows)) {
+                rows.forEach(r => {
+                    if (r && typeof r === 'object' && !Array.isArray(r)) Object.keys(r).forEach(k => set.add(k));
+                    else set.add('value');
+                });
+            } else if (rows && typeof rows === 'object') {
+                Object.keys(rows).forEach(k => set.add(k));
+            }
+            return [...set];
+        }
+        function isObject(v) { return v && typeof v === 'object' && !Array.isArray(v); }
+        function valueType(v) {
+            return Array.isArray(v) ? 'array' : v === null ? 'null' : typeof v;
+        }
+        function isExpanded(path, rootExpanded = false) {
+            if (rootExpanded) return true;
+            return !(collapseState[path] ?? globalCollapsed);
+        }
+
+        function primitiveEditor(path, value, extra = '') {
+            const safe = value === undefined || value === null ? '' : escapeAttr(String(value));
+            const type = valueType(value);
+            return `<input class="viewer-edit ${type} ${extra}" data-searchable="1" value="${safe}" oninput="updatePathValue('${esc(path)}', this.value)" onchange="updatePathValue('${esc(path)}', this.value)" />`;
+        }
+        function nestedPrimitiveEditor(path, value) {
+            return primitiveEditor(path, value);
+        }
+
+        function getArrayHeaders(arr) {
+            return arr.reduce((headers, element) => {
+                if (isObject(element)) return [...new Set([...headers, ...Object.keys(element)])];
+                return headers;
+            }, []);
+        }
+
+        function displayCellText(value) {
+            if (value === undefined || value === null) return '';
+            if (Array.isArray(value)) return `Array[${value.length}]`;
+            if (isObject(value)) return `Object[${Object.keys(value).length}]`;
+            return String(value);
+        }
+
+        function getArrayColumnWidths(arr, headers) {
+            const widths = {};
+            headers.forEach(header => {
+                let maxLen = String(header).length;
+                for (const row of arr) {
+                    const val = isObject(row) ? row[header] : undefined;
+                    const len = displayCellText(val).length;
+                    if (len > maxLen) maxLen = len;
+                }
+                // Add small breathing space and keep sane minimum.
+                widths[header] = Math.max(8, maxLen + 2);
+            });
+            return widths;
+        }
+
+        function renderCollapsed(kind, count, path) {
+            return `<span class="viewer-collapsed"><span class="viewer-badge ${kind}">${kind === 'array' ? `Array[${count}]` : `Object[${count}]`}</span><span class="viewer-expand" onclick="toggleNode('${esc(path)}')">+</span></span>`;
+        }
+
+        function renderObjectTable(member, path) {
+            const rows = Object.entries(member).map(([key, val]) => {
+                const childPath = path ? `${path}.${key}` : key;
+                return `<tr class="object member"><th class="viewer-key">${escapeHtml(key)}</th><td class="viewer-element">${renderCell(val, childPath)}</td></tr>`;
+            }).join('');
+            return `<table class="viewer-table object"><tbody>${rows}</tbody></table>`;
+        }
+
+        function renderArrayRow(element, index, headers, path, columnWidths) {
+            const type = valueType(element);
+            const rowPath = path ? `${path}.${index}` : String(index);
+
+            if (isObject(element)) {
+                const cells = headers.map(header => {
+                    const childPath = `${rowPath}.${header}`;
+                    const colWidth = columnWidths[header] || Math.max(8, String(header).length + 2);
+                    return `<td class="viewer-member" style="min-width:${colWidth}ch;width:${colWidth}ch">${renderCell(element[header], childPath)}</td>`;
+                }).join('');
+                return `<tr class="array-el ${type}"><td class="viewer-index ${type}">${index}</td>${cells}</tr>`;
+            }
+
+            return `<tr class="array-el ${type}"><td class="viewer-index ${type}">${index}</td><td class="viewer-value-cell" colspan="${Math.max(headers.length, 1)}">${renderCell(element, rowPath)}</td></tr>`;
+        }
+
+        function renderArrayTable(arr, path) {
+            const headers = getArrayHeaders(arr);
+            const columnWidths = getArrayColumnWidths(arr, headers);
+            const headerCells = headers.map(header => {
+                const colWidth = columnWidths[header] || Math.max(8, String(header).length + 2);
+                return `<th class="viewer-member-header" data-resizable="1" style="min-width:${colWidth}ch;width:${colWidth}ch">${escapeHtml(header)}<div class="viewer-resizer"></div></th>`;
+            }).join('');
+            const head = headers.length
+                ? `<thead><tr><th class="viewer-member-header" style="min-width:42px;width:42px"></th>${headerCells}</tr></thead>`
+                : '';
+            const body = arr.map((item, index) => renderArrayRow(item, index, headers, path, columnWidths)).join('');
+            return `<table class="viewer-table array">${head}<tbody>${body}</tbody></table>`;
+        }
+
+        function renderCell(value, path, rootExpanded = false) {
+            if (Array.isArray(value)) {
+                const expanded = isExpanded(path, rootExpanded);
+                return `${expanded ? `<span class="viewer-collapsed"><span class="viewer-badge array">Array[${value.length}]</span><span class="viewer-expand" onclick="toggleNode('${esc(path)}')">-</span></span>${renderArrayTable(value, path)}` : renderCollapsed('array', value.length, path)}`;
+            }
+
+            if (isObject(value)) {
+                const expanded = isExpanded(path, rootExpanded);
+                const count = Object.keys(value).length;
+                return `${expanded ? `<span class="viewer-collapsed"><span class="viewer-badge object">Object[${count}]</span><span class="viewer-expand" onclick="toggleNode('${esc(path)}')">-</span></span>${renderObjectTable(value, path)}` : renderCollapsed('object', count, path)}`;
+            }
+
+            return primitiveEditor(path, value);
+        }
+
+        function toggleNode(path) {
+            collapseState[path] = !(collapseState[path] ?? globalCollapsed);
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const wrap = q('gridWrap');
+            if (rawData === undefined || rawData === null || rawData === '') {
+                wrap.innerHTML = '<div class="empty">Paste or edit valid JSON on the left. The grid will sync automatically.</div>';
+                return;
+            }
+            if (Array.isArray(rawData) && rawData.length === 0) {
+                wrap.innerHTML = '<div class="empty">Paste or edit valid JSON on the left. The grid will sync automatically.</div>';
+                return;
+            }
+            wrap.innerHTML = `<div class="viewer-host">${renderCell(rawData, 'root', true)}</div>`;
+            initResizableTables();
+        }
+
+        function initResizableTables() {
+            const resizers = [...q('gridWrap').querySelectorAll('.viewer-resizer')];
+            resizers.forEach(resizer => {
+                resizer.onmousedown = (event) => {
+                    event.preventDefault();
+                    const th = resizer.parentElement;
+                    const table = th.closest('table');
+                    const startX = event.pageX;
+                    const startWidth = parseInt(window.getComputedStyle(th).width, 10);
+                    const columnIndex = th.cellIndex + 1;
+
+                    const setSize = (moveEvent) => {
+                        const movedX = moveEvent.pageX - startX;
+                        const width = Math.max(80, startWidth + movedX) + 'px';
+                        th.style.width = width;
+                        th.style.minWidth = width;
+                        table.querySelectorAll(`tbody tr td:nth-child(${columnIndex}), tbody tr th:nth-child(${columnIndex})`).forEach(cell => {
+                            cell.style.width = width;
+                            cell.style.minWidth = width;
+                        });
+                    };
+
+                    const cleanup = () => {
+                        document.removeEventListener('mousemove', setSize);
+                        document.removeEventListener('mouseup', cleanup);
+                    };
+
+                    document.addEventListener('mousemove', setSize);
+                    document.addEventListener('mouseup', cleanup);
+                };
+                resizer.ondblclick = () => {
+                    const th = resizer.parentElement;
+                    const table = th.closest('table');
+                    const columnIndex = th.cellIndex + 1;
+                    th.style.width = '';
+                    th.style.minWidth = '';
+                    table.querySelectorAll(`tbody tr td:nth-child(${columnIndex}), tbody tr th:nth-child(${columnIndex})`).forEach(cell => {
+                        cell.style.width = '';
+                        cell.style.minWidth = '';
+                    });
+                };
+            });
+        }
+
+        function splitPath(path) {
+            if (!path || path === 'root') return [];
+            return path
+                .split('.')
+                .filter(Boolean)
+                .filter((p, idx) => !(idx === 0 && p === 'root'))
+                .map(p => /^\d+$/.test(p) ? Number(p) : p);
+        }
+        function getPathValue(obj, pathArr) { let cur = obj; for (const p of pathArr) { if (cur == null) return undefined; cur = cur[p]; } return cur; }
+        function setPathValue(target, pathArr, value) {
+            if (!pathArr.length) return value;
+            let cur = target;
+            for (let i = 0; i < pathArr.length - 1; i++) {
+                const key = pathArr[i];
+                const next = pathArr[i + 1];
+                if (cur[key] === undefined || cur[key] === null) cur[key] = typeof next === 'number' ? [] : {};
+                cur = cur[key];
+            }
+            cur[pathArr[pathArr.length - 1]] = value;
+            return target;
+        }
+        function parseByExistingType(val, current) {
+            if (val === 'null') return null;
+            if (val === 'true') return true;
+            if (val === 'false') return false;
+            if (typeof current === 'number') return val === '' ? null : Number(val);
+            if (typeof current === 'boolean') return val.toLowerCase() === 'true';
+            if (current === null && val !== '' && !isNaN(Number(val))) return Number(val);
+            if (val !== '' && !isNaN(Number(val)) && typeof current !== 'string') return Number(val);
+            return val;
+        }
+
+        let isUpdatingFromGrid = false;
+
+        let jsonHighlightDecorations = [];
+
+        function findJsonRangeByPath(json, targetPath) {
+            let i = 0;
+            let result = null;
+
+            function skipWs() {
+                while (i < json.length && /\s/.test(json[i])) i++;
+            }
+
+            function parseStringToken() {
+                const start = i;
+                i++; // opening quote
+                let escaped = false;
+                while (i < json.length) {
+                    const ch = json[i++];
+                    if (escaped) {
+                        escaped = false;
+                        continue;
+                    }
+                    if (ch === '\\') {
+                        escaped = true;
+                        continue;
+                    }
+                    if (ch === '"') break;
+                }
+                const end = i;
+                return { start, end, value: JSON.parse(json.slice(start, end)) };
+            }
+
+            function isExactPath(path) {
+                if (path.length !== targetPath.length) return false;
+                for (let idx = 0; idx < path.length; idx++) {
+                    if (path[idx] !== targetPath[idx]) return false;
+                }
+                return true;
+            }
+
+            function parsePrimitive() {
+                const start = i;
+                while (i < json.length && !/[\s,\]\}]/.test(json[i])) i++;
+                return { start, end: i };
+            }
+
+            function parseValue(path) {
+                skipWs();
+                const ch = json[i];
+                if (ch === '{') return parseObject(path);
+                if (ch === '[') return parseArray(path);
+                if (ch === '"') {
+                    const tok = parseStringToken();
+                    return { start: tok.start, end: tok.end };
+                }
+                return parsePrimitive();
+            }
+
+            function parseObject(path) {
+                const objStart = i;
+                i++; // {
+                skipWs();
+
+                if (json[i] === '}') {
+                    i++;
+                    return { start: objStart, end: i };
+                }
+
+                while (i < json.length) {
+                    skipWs();
+                    const keyTok = parseStringToken();
+                    const key = keyTok.value;
+                    skipWs();
+                    if (json[i] === ':') i++;
+                    skipWs();
+
+                    const childPath = path.concat(key);
+                    const valueRange = parseValue(childPath);
+
+                    if (!result && isExactPath(childPath)) {
+                        // Highlight full key-value pair for object members.
+                        result = { start: keyTok.start, end: valueRange.end };
+                    }
+
+                    skipWs();
+                    if (json[i] === ',') {
+                        i++;
+                        continue;
+                    }
+                    if (json[i] === '}') {
+                        i++;
+                        break;
+                    }
+                }
+
+                return { start: objStart, end: i };
+            }
+
+            function parseArray(path) {
+                const arrStart = i;
+                i++; // [
+                skipWs();
+
+                if (json[i] === ']') {
+                    i++;
+                    return { start: arrStart, end: i };
+                }
+
+                let index = 0;
+                while (i < json.length) {
+                    const childPath = path.concat(index);
+                    const valueStart = i;
+                    const valueRange = parseValue(childPath);
+
+                    if (!result && isExactPath(childPath)) {
+                        // For arrays, highlight just the element value.
+                        result = { start: valueStart, end: valueRange.end };
+                    }
+
+                    skipWs();
+                    if (json[i] === ',') {
+                        i++;
+                        index++;
+                        continue;
+                    }
+                    if (json[i] === ']') {
+                        i++;
+                        break;
+                    }
+                }
+
+                return { start: arrStart, end: i };
+            }
+
+            parseValue([]);
+            return result;
+        }
+
+        function highlightJsonPath(pathStr) {
+            if (!pathStr || pathStr === 'root') return;
+            const json = getEditorValue();
+            if (!json) return;
+
+            const pathArr = splitPath(pathStr);
+            if (!pathArr.length) return;
+
+            try {
+                const range = findJsonRangeByPath(json, pathArr);
+                if (!range || range.start < 0 || range.end <= range.start) return;
+
+                if (isUsingMonaco && monacoEditor && monacoModel) {
+                    if (jsonHighlightDecorations.length > 0) {
+                        jsonHighlightDecorations = monacoEditor.deltaDecorations(jsonHighlightDecorations, []);
+                    }
+
+                    const startPos = monacoModel.getPositionAt(range.start);
+                    const endPos = monacoModel.getPositionAt(range.end);
+
+                    const newDecorations = [{
+                        range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+                        options: {
+                            isWholeLine: false,
+                            inlineClassName: 'json-field-highlight'
+                        }
+                    }];
+
+                    jsonHighlightDecorations = monacoEditor.deltaDecorations([], newDecorations);
+                    monacoEditor.revealLineInCenter(startPos.lineNumber);
+                } else {
+                    jsonInput.setSelectionRange(range.start, range.end);
+                    jsonInput.scrollIntoView();
+                }
+            } catch (e) {
+                // Silent fail if JSON parse fails
+            }
+        }
+
+        function updatePathValue(path, newVal) {
+            try {
+                const pathArr = splitPath(path);
+                const current = getPathValue(rawData, pathArr);
+                const parsed = parseByExistingType(newVal, current);
+                rawData = setPathValue(rawData, pathArr, parsed);
+
+                // Set flag to prevent circular updates
+                isUpdatingFromGrid = true;
+
+                // Always push grid edits to JSON panel immediately
+                syncJsonFromGrid(false);
+
+                // Highlight the exact edited record in JSON panel
+                highlightJsonPath(path);
+
+                // Don't re-render grid during editing to allow multi-character input
+                // Only update JSON side; grid stays interactive while user types
+
+                setStatus(undefined, `Updated ${path}`);
+
+                // Reset flag
+                isUpdatingFromGrid = false;
+            } catch (e) {
+                isUpdatingFromGrid = false;
+                setStatus(undefined, 'Update failed: ' + e.message);
+            }
+        }
+
+        function renameColumn(oldName, newName) {
+            if (!Array.isArray(rawData)) {
+                renderGrid();
+                return;
+            }
+            const trimmed = String(newName || '').trim();
+            if (!trimmed || trimmed === oldName) {
+                renderGrid();
+                return;
+            }
+            if (columns.includes(trimmed)) {
+                setStatus(undefined, `Column name already exists: ${trimmed}`);
+                renderGrid();
+                return;
+            }
+
+            rawData.forEach(row => {
+                if (!row || typeof row !== 'object' || Array.isArray(row)) return;
+                if (Object.prototype.hasOwnProperty.call(row, oldName)) {
+                    row[trimmed] = row[oldName];
+                    delete row[oldName];
+                }
+            });
+
+            columns = columns.map(col => col === oldName ? trimmed : col);
+            syncJsonFromGrid(true);
+            setStatus(undefined, `Renamed ${oldName} to ${trimmed}`);
+        }
+
+        function syncJsonFromGrid(reRender = true) {
+            setEditorValue(JSON.stringify(rawData, null, 2));
+            columns = collectColumns(rawData);
+            syncGutter();
+            syncJsonHighlighter();
+            if (reRender) renderGrid();
+        }
+
+        function downloadJson() {
+            const data = JSON.stringify(rawData, null, 2);
+            downloadBlob(data, 'application/json', 'pgsv_json_grid_data.json');
+            setStatus(undefined, 'JSON downloaded');
+        }
+
+        function flattenForCsv(obj, prefix = '', res = {}) {
+            if (Array.isArray(obj)) {
+                if (obj.every(v => !(Array.isArray(v) || isObject(v)))) {
+                    res[prefix || 'value'] = obj.join(' | ');
+                } else {
+                    obj.forEach((v, i) => flattenForCsv(v, prefix ? `${prefix}[${i}]` : `[${i}]`, res));
+                }
+                return res;
+            }
+            if (isObject(obj)) {
+                Object.keys(obj).forEach(k => flattenForCsv(obj[k], prefix ? `${prefix}.${k}` : k, res));
+                return res;
+            }
+            res[prefix || 'value'] = obj ?? '';
+            return res;
+        }
+
+        function downloadCsv() {
+            const csvRows = Array.isArray(rawData) ? rawData : [rawData];
+            if (!csvRows.length) { alert('No data available to export.'); return; }
+            const flatRows = csvRows.map(r => flattenForCsv(r));
+            const cols = [...new Set(flatRows.flatMap(r => Object.keys(r)))];
+            const lines = [];
+            lines.push(cols.map(csvEscape).join(','));
+            flatRows.forEach(r => {
+                lines.push(cols.map(c => csvEscape(r[c] ?? '')).join(','));
+            });
+            downloadBlob(lines.join('\n'), 'text/csv;charset=utf-8;', 'pgsv_json_grid_data.csv');
+            setStatus(undefined, 'CSV downloaded');
+        }
+
+        function csvEscape(v) {
+            const s = String(v ?? '');
+            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        }
+        function downloadBlob(content, type, filename) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function initDivider() {
+            const divider = q('divider');
+            const workspace = q('workspace');
+            let dragging = false;
+            function move(clientX) {
+                const rect = workspace.getBoundingClientRect();
+                let percent = ((clientX - rect.left) / rect.width) * 100;
+                percent = Math.max(20, Math.min(80, percent));
+                document.documentElement.style.setProperty('--split-left', percent + '%');
+                setStatus(undefined, `Panel width adjusted: ${Math.round(percent)}% / ${Math.round(100 - percent)}%`);
+            }
+            divider.addEventListener('mousedown', (e) => { dragging = true; document.body.style.userSelect = 'none'; e.preventDefault(); });
+            window.addEventListener('mousemove', (e) => { if (dragging) move(e.clientX); });
+            window.addEventListener('mouseup', () => { if (dragging) { dragging = false; document.body.style.userSelect = ''; } });
+            divider.addEventListener('dblclick', () => { document.documentElement.style.setProperty('--split-left', '48%'); setStatus(undefined, 'Panel width reset'); });
+        }
+
+        function escapeHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function escapeAttr(str) { return escapeHtml(str).replace(/\n/g, '&#10;'); }
+        function esc(str) { return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+        window.addEventListener('load', () => {
+            try {
+                applyTheme(localStorage.getItem('jsonGridTheme') || 'light');
+            } catch (e) {
+                applyTheme('light');
+            }
+            initDivider();
+            syncGutter();
+            syncJsonHighlighter();
+            initMonacoEditor();
+            renderJsonTree();
+        });
+    </script>
+</body>
+
+</html>
