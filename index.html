@@ -918,6 +918,11 @@
         const q = (id) => document.getElementById(id);
         const jsonInput = q('jsonInput');
 
+          window.onload = function () {
+            toggleTheme('dark');
+        };
+
+
         function getEditorValue() {
             return isUsingMonaco && monacoModel ? monacoModel.getValue() : jsonInput.value;
         }
