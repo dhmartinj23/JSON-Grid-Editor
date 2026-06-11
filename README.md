@@ -7,6 +7,8 @@ JSON Grid Editor is a standalone browser-based tool to view, edit, and validate 
 
 Changes made in either side are reflected immediately on the other side.
 
+https://dhmartinj23.github.io/JSON-Grid-Editor/
+
 ## Demo
 ![demo](./Demo.png)
 
