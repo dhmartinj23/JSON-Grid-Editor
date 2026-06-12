@@ -222,7 +222,7 @@
             gap: 6px;
             color: var(--white);
             border-bottom: 1px solid var(--black);
-            overflow: auto hidden
+            overflow: visible
         }
 
         .toolbar-title {
@@ -249,6 +249,183 @@
         .json-toolbar-group {
             display: flex;
             gap: 6px
+        }
+
+        .grid-toolbar-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            position: relative;
+            margin-left: 4px;
+        }
+
+        .columns-panel {
+            position: absolute;
+            top: 34px;
+            left: 0;
+            min-width: 280px;
+            max-width: 360px;
+            max-height: 320px;
+            background: var(--panel-bg);
+            border: 1px solid var(--gray-3);
+            border-radius: 4px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+            z-index: 25;
+            color: var(--text-main);
+            display: none;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .columns-panel {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-4) var(--panel-alt-bg);
+        }
+
+        .columns-panel::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .columns-panel::-webkit-scrollbar-track {
+            background: var(--panel-alt-bg);
+            border-radius: 8px;
+        }
+
+        .columns-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gray-4), var(--gray-5));
+            border-radius: 8px;
+            border: 2px solid var(--panel-alt-bg);
+        }
+
+        .columns-panel::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-blue), #2a79ee);
+        }
+
+        .columns-panel.open {
+            display: flex;
+        }
+
+        .columns-panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            padding: 8px 8px 0 8px;
+        }
+
+        .columns-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .columns-search {
+            min-height: 28px;
+            border: 1px solid var(--gray-3);
+            background: var(--panel-alt-bg);
+            color: var(--text-main);
+            border-radius: 3px;
+            padding: 0 8px;
+            font-size: 12px;
+            margin: 8px 8px 8px 8px;
+        }
+
+        .columns-action-btn {
+            border: 1px solid var(--gray-3);
+            background: var(--panel-alt-bg);
+            color: var(--text-main);
+            border-radius: 3px;
+            font-size: 11px;
+            padding: 3px 6px;
+            cursor: pointer;
+        }
+
+        .columns-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 8px 8px;
+            min-height: 0;
+        }
+
+        .columns-footer-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 8px;
+            border-top: 1px solid var(--gray-2);
+            flex-shrink: 0;
+        }
+
+        .columns-panel-resize-handle {
+            height: 4px;
+            background: linear-gradient(180deg, transparent, var(--gray-3));
+            cursor: row-resize;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .columns-panel-resize-handle:hover {
+            background: linear-gradient(180deg, var(--gray-3), var(--gray-4));
+        }
+
+        .column-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--gray-2);
+            background: var(--panel-alt-bg);
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+
+        .column-item input[type="checkbox"] {
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .column-item.dragging {
+            opacity: .45;
+        }
+
+        .column-item.drop-before::before {
+            content: '';
+            position: absolute;
+            left: -4px;
+            right: -4px;
+            top: -3px;
+            height: 5px;
+            background: var(--red-1);
+            border-radius: 2px;
+        }
+
+        .column-item.drop-after::after {
+            content: '';
+            position: absolute;
+            left: -4px;
+            right: -4px;
+            bottom: -3px;
+            height: 5px;
+            background: var(--red-1);
+            border-radius: 2px;
+        }
+
+        .column-drag {
+            cursor: grab;
+            user-select: none;
+            color: var(--muted-text);
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .column-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
         }
 
         .toolbtn {
@@ -848,7 +1025,7 @@
             <div class="titlebar-right">
                 <label class="theme-switch" for="themeToggleBtn">
                     <span>Dark</span>
-                    <input id="themeToggleBtn" type="checkbox" onchange="toggleTheme(this.checked ? 'dark' : 'light')"
+                    <input id="themeToggleBtn" type="checkbox"  onchange="toggleTheme(this.checked ? 'dark' : 'light')"
                         aria-label="Toggle dark mode" />
                 </label>
                 <div class="app-credit">Developed by Thanga</div>
@@ -888,6 +1065,23 @@
                     <button class="toolbtn blue" onclick="searchGrid()">Search</button>
                     <button class="toolbtn blue" onclick="expandAll()">Expand All</button>
                     <button class="toolbtn blue" onclick="collapseAll()">Collapse All</button>
+                    <div class="grid-toolbar-group">
+                        <button class="toolbtn gray" onclick="toggleColumnsPanel()">Columns</button>
+                        <div id="columnsPanel" class="columns-panel">
+                            <div class="columns-panel-title">Select and reorder columns</div>
+                            <input id="columnsSearchInput" class="columns-search" type="text" placeholder="Search columns..." oninput="setColumnsSearch(this.value)" />
+                            <div class="columns-actions">
+                                <button class="columns-action-btn" onclick="selectAllColumns()">Select All</button>
+                                <button class="columns-action-btn" onclick="clearAllColumns()">Clear</button>
+                            </div>
+                            <div id="columnsList" class="columns-list"></div>
+                            <div class="columns-footer-actions">
+                                <button class="columns-action-btn" onclick="closeColumnsPanel(true)">Close</button>
+                                <button class="columns-action-btn" onclick="applyColumnsPanelChanges()">Apply</button>
+                            </div>
+                            <div class="columns-panel-resize-handle" title="Drag to resize"></div>
+                        </div>
+                    </div>
                     <div class="right">
                         <button class="toolbtn red" onclick="downloadJson()">Download JSON</button>
                         <button class="toolbtn red2" onclick="downloadCsv()">Download CSV</button>
@@ -914,12 +1108,24 @@
         let monacoEditor = null;
         let monacoModel = null;
         let isUsingMonaco = false;
+        let selectedColumns = [];
+        let columnOrder = [];
+        let columnsPanelOpen = false;
+        let draggedColumn = null;
+        let columnsSearchTerm = '';
+        let allowEmptyColumnSelection = false;
+        let panelSelectedSnapshot = [];
+        let panelOrderSnapshot = [];
+        let columnsPanelHeight = 320;
+        let isResizingPanel = false;
 
         const q = (id) => document.getElementById(id);
         const jsonInput = q('jsonInput');
 
-          window.onload = function () {
+        
+        window.onload = function () {
             toggleTheme('dark');
+            initColumnsPanelResize();
         };
 
 
@@ -1407,6 +1613,9 @@
             globalCollapsed = true;
             collapseState = {};
             jsonCollapseState = {};
+            columns = collectColumns(rawData);
+            syncColumnSelection(columns);
+            if (columnsPanelOpen) renderColumnsPanel();
             syncJsonFromGrid(true);
             setStatus('Sample JSON loaded', 'Editable grid ready');
         }
@@ -1416,9 +1625,11 @@
             syncGutter();
             syncJsonHighlighter();
             rawData = []; columns = [];
+            selectedColumns = [];
             collapseState = {};
             jsonCollapseState = {};
             globalCollapsed = true;
+            if (columnsPanelOpen) renderColumnsPanel();
             renderGrid();
             setStatus('Cleared', 'No data loaded');
         }
@@ -1449,14 +1660,28 @@
 
         function tryParseLive() {
             const txt = getEditorValue().trim();
-            if (!txt) { rawData = []; columns = []; collapseState = {}; jsonCollapseState = {}; globalCollapsed = true; renderGrid(); syncJsonHighlighter(); setStatus('JSON input empty', 'No data loaded'); return; }
+            if (!txt) {
+                rawData = [];
+                columns = [];
+                selectedColumns = [];
+                collapseState = {};
+                jsonCollapseState = {};
+                globalCollapsed = true;
+                if (columnsPanelOpen) renderColumnsPanel();
+                renderGrid();
+                syncJsonHighlighter();
+                setStatus('JSON input empty', 'No data loaded');
+                return;
+            }
             try {
                 const parsed = JSON.parse(txt);
                 rawData = deepClone(parsed);
                 columns = collectColumns(rawData);
+                syncColumnSelection(columns);
                 collapseState = {};
                 jsonCollapseState = {};
                 globalCollapsed = true;
+                if (columnsPanelOpen) renderColumnsPanel();
                 renderGrid();
                 syncJsonHighlighter();
                 setStatus('JSON synced from input', Array.isArray(rawData) ? `${rawData.length} item(s)` : 'Object loaded');
@@ -1509,6 +1734,227 @@
                 if (hit) found++;
             });
             setStatus(undefined, found ? `${found} matching field(s) highlighted` : 'No matches found');
+        }
+
+        function syncColumnSelection(nextColumns) {
+            const incoming = Array.isArray(nextColumns) ? nextColumns.slice() : [];
+            const prevSelected = selectedColumns.slice();
+            const prevOrder = columnOrder.slice();
+
+            columnOrder = prevOrder.filter(col => incoming.includes(col));
+            incoming.forEach(col => {
+                if (!columnOrder.includes(col)) columnOrder.push(col);
+            });
+
+            selectedColumns = prevSelected.filter(col => incoming.includes(col));
+
+            if (!selectedColumns.length && incoming.length && !allowEmptyColumnSelection) {
+                selectedColumns = columnOrder.slice();
+            }
+        }
+
+        function visibleColumns(allHeaders) {
+            const headers = Array.isArray(allHeaders) ? allHeaders : [];
+            return columnOrder.filter(col => headers.includes(col) && selectedColumns.includes(col));
+        }
+
+        function initColumnsPanelResize() {
+            const handle = document.querySelector('.columns-panel-resize-handle');
+            if (!handle) return;
+            
+            handle.addEventListener('mousedown', (e) => {
+                isResizingPanel = true;
+                const startY = e.clientY;
+                const panel = q('columnsPanel');
+                const startHeight = columnsPanelHeight;
+                
+                const onMouseMove = (moveEvent) => {
+                    if (!isResizingPanel) return;
+                    const deltaY = moveEvent.clientY - startY;
+                    const newHeight = Math.max(150, Math.min(500, startHeight + deltaY));
+                    columnsPanelHeight = newHeight;
+                    if (panel) {
+                        panel.style.maxHeight = newHeight + 'px';
+                    }
+                };
+                
+                const onMouseUp = () => {
+                    isResizingPanel = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    localStorage.setItem('columnsPanelHeight', columnsPanelHeight);
+                };
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+            
+            // Load saved height from localStorage
+            const savedHeight = localStorage.getItem('columnsPanelHeight');
+            if (savedHeight) {
+                columnsPanelHeight = Math.max(150, Math.min(500, parseInt(savedHeight, 10)));
+                const panel = q('columnsPanel');
+                if (panel) {
+                    panel.style.maxHeight = columnsPanelHeight + 'px';
+                }
+            }
+        }
+
+        function toggleColumnsPanel(force) {
+            const panel = q('columnsPanel');
+            if (!panel) return;
+            const nextOpen = typeof force === 'boolean' ? force : !columnsPanelOpen;
+            if (!nextOpen && columnsPanelOpen) {
+                closeColumnsPanel(true);
+                return;
+            }
+            columnsPanelOpen = nextOpen;
+            panel.classList.toggle('open', columnsPanelOpen);
+            if (columnsPanelOpen) {
+                panelSelectedSnapshot = selectedColumns.slice();
+                panelOrderSnapshot = columnOrder.slice();
+                const input = q('columnsSearchInput');
+                if (input) {
+                    input.value = columnsSearchTerm;
+                    setTimeout(() => input.focus(), 0);
+                }
+                renderColumnsPanel();
+            }
+        }
+
+        function closeColumnsPanel(discardChanges = true) {
+            const panel = q('columnsPanel');
+            if (!panel) return;
+            if (discardChanges) {
+                selectedColumns = panelSelectedSnapshot.slice();
+                columnOrder = panelOrderSnapshot.slice();
+            }
+            columnsPanelOpen = false;
+            panel.classList.remove('open');
+        }
+
+        function applyColumnsPanelChanges() {
+            allowEmptyColumnSelection = selectedColumns.length === 0;
+            panelSelectedSnapshot = selectedColumns.slice();
+            panelOrderSnapshot = columnOrder.slice();
+            closeColumnsPanel(false);
+            renderGrid();
+            setStatus(undefined, 'Column selection applied');
+        }
+
+        function setColumnsSearch(term) {
+            columnsSearchTerm = String(term || '').trim().toLowerCase();
+            renderColumnsPanel();
+        }
+
+        function clearDropIndicators() {
+            document.querySelectorAll('.column-item.drop-before, .column-item.drop-after').forEach(el => {
+                el.classList.remove('drop-before', 'drop-after');
+            });
+        }
+
+        function renderColumnsPanel() {
+            const list = q('columnsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!columns.length) {
+                list.innerHTML = '<div class="column-name">No columns available</div>';
+                return;
+            }
+
+            const matchesSearch = (col) => !columnsSearchTerm || String(col).toLowerCase().includes(columnsSearchTerm);
+
+            columnOrder.filter(matchesSearch).forEach(col => {
+                const item = document.createElement('div');
+                item.className = 'column-item';
+                item.draggable = true;
+                item.dataset.column = col;
+                item.style.position = 'relative';
+
+                item.addEventListener('dragstart', (e) => {
+                    draggedColumn = col;
+                    item.classList.add('dragging');
+                    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                });
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    clearDropIndicators();
+                    draggedColumn = null;
+                });
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    clearDropIndicators();
+                    const rect = item.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    if (e.clientY < midpoint) {
+                        item.classList.add('drop-before');
+                    } else {
+                        item.classList.add('drop-after');
+                    }
+                });
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const target = item.dataset.column;
+                    if (!draggedColumn || draggedColumn === target) return;
+                    clearDropIndicators();
+                    moveSelectedColumn(draggedColumn, target);
+                });
+
+                const drag = document.createElement('span');
+                drag.className = 'column-drag';
+                drag.textContent = '::';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = selectedColumns.includes(col);
+                checkbox.addEventListener('click', (e) => e.stopPropagation());
+                checkbox.addEventListener('mousedown', (e) => e.stopPropagation());
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        if (!selectedColumns.includes(col)) selectedColumns.push(col);
+                    } else {
+                        selectedColumns = selectedColumns.filter(c => c !== col);
+                    }
+                    renderColumnsPanel();
+                });
+
+                const name = document.createElement('span');
+                name.className = 'column-name';
+                name.textContent = col;
+
+                item.appendChild(drag);
+                item.appendChild(checkbox);
+                item.appendChild(name);
+                list.appendChild(item);
+            });
+
+            if (!list.children.length) {
+                list.innerHTML = '<div class="column-name">No matching columns</div>';
+            }
+        }
+
+        function moveSelectedColumn(sourceCol, targetCol) {
+            const fromIdx = columnOrder.indexOf(sourceCol);
+            const toIdx = columnOrder.indexOf(targetCol);
+            if (fromIdx < 0 || toIdx < 0) return;
+            const next = columnOrder.slice();
+            next.splice(fromIdx, 1);
+            next.splice(toIdx, 0, sourceCol);
+            columnOrder = next;
+            renderColumnsPanel();
+        }
+
+        function selectAllColumns() {
+            selectedColumns = columnOrder.slice();
+            allowEmptyColumnSelection = false;
+            renderColumnsPanel();
+        }
+
+        function clearAllColumns() {
+            selectedColumns = [];
+            allowEmptyColumnSelection = true;
+            renderColumnsPanel();
         }
 
         function expandAll() { globalCollapsed = false; collapseState = {}; renderGrid(); setStatus(undefined, 'All nested values expanded'); }
@@ -1603,7 +2049,8 @@
         }
 
         function renderArrayTable(arr, path) {
-            const headers = getArrayHeaders(arr);
+            const allHeaders = getArrayHeaders(arr);
+            const headers = visibleColumns(allHeaders);
             const columnWidths = getArrayColumnWidths(arr, headers);
             const headerCells = headers.map(header => {
                 const colWidth = columnWidths[header] || Math.max(8, String(header).length + 2);
@@ -1646,6 +2093,9 @@
                 wrap.innerHTML = '<div class="empty">Paste or edit valid JSON on the left. The grid will sync automatically.</div>';
                 return;
             }
+            columns = collectColumns(rawData);
+            syncColumnSelection(columns);
+            if (columnsPanelOpen) renderColumnsPanel();
             wrap.innerHTML = `<div class="viewer-host">${renderCell(rawData, 'root', true)}</div>`;
             initResizableTables();
         }
@@ -1964,6 +2414,8 @@
         function syncJsonFromGrid(reRender = true) {
             setEditorValue(JSON.stringify(rawData, null, 2));
             columns = collectColumns(rawData);
+            syncColumnSelection(columns);
+            if (columnsPanelOpen) renderColumnsPanel();
             syncGutter();
             syncJsonHighlighter();
             if (reRender) renderGrid();
@@ -1971,7 +2423,7 @@
 
         function downloadJson() {
             const data = JSON.stringify(rawData, null, 2);
-            downloadBlob(data, 'application/json', 'pgsv_json_grid_data.json');
+            downloadBlob(data, 'application/json', 'json_grid_data.json');
             setStatus(undefined, 'JSON downloaded');
         }
 
@@ -2051,6 +2503,15 @@
             syncJsonHighlighter();
             initMonacoEditor();
             renderJsonTree();
+
+            document.addEventListener('click', (e) => {
+                const panel = q('columnsPanel');
+                const group = document.querySelector('.grid-toolbar-group');
+                if (!panel || !group || !columnsPanelOpen) return;
+                if (!group.contains(e.target)) {
+                    closeColumnsPanel(true);
+                }
+            });
         });
     </script>
 </body>
